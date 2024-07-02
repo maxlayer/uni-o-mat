@@ -12,7 +12,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.image("uni.png", use_column_width=True)
+st.image("uni.png", width=200px)
 
 # Titel der App
 st.title("Uni-O-Mat")
