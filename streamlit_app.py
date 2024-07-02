@@ -1,119 +1,263 @@
 import streamlit as st
-import pandas as pd
 
+# Titel der App
+st.title("Uni-O-Mat")
 
-st.title("📊 Data evaluation app")
+# Einführungstext
+st.write("""
+Willkommen beim Uni-O-Mat! Diese App hilft dir dabei, die richtige Entscheidung bezüglich deiner Universitätswahl oder Kurswahl zu treffen. 
+Bitte wähle eine der folgenden Optionen aus:
+""")
 
-st.write(
-    "We are so glad to see you here. ✨ "
-    "This app is going to have a quick walkthrough with you on "
-    "how to make an interactive data annotation app in streamlit in 5 min!"
+# Auswahl ob die Person bereits studiert
+study_status = st.radio(
+    "Bist du bereits Student/in?",
+    ("Noch nicht", "Bachelor-Student/in", "Master-Student/in")
 )
 
-st.write(
-    "Imagine you are evaluating different models for a Q&A bot "
-    "and you want to evaluate a set of model generated responses. "
-    "You have collected some user data. "
-    "Here is a sample question and response set."
-)
+# Funktion zur Anzeige des Fragenkatalogs für neue Studenten
+def new_student_questions():
+    st.header("Persönliche Informationen")
+    name = st.text_input("Wie heißt du?")
+    age = st.number_input("Wie alt bist du?", min_value=16, max_value=100)
 
-data = {
-    "Questions": [
-        "Who invented the internet?",
-        "What causes the Northern Lights?",
-        "Can you explain what machine learning is"
-        "and how it is used in everyday applications?",
-        "How do penguins fly?",
-    ],
-    "Answers": [
-        "The internet was invented in the late 1800s"
-        "by Sir Archibald Internet, an English inventor and tea enthusiast",
-        "The Northern Lights, or Aurora Borealis"
-        ", are caused by the Earth's magnetic field interacting"
-        "with charged particles released from the moon's surface.",
-        "Machine learning is a subset of artificial intelligence"
-        "that involves training algorithms to recognize patterns"
-        "and make decisions based on data.",
-        " Penguins are unique among birds because they can fly underwater. "
-        "Using their advanced, jet-propelled wings, "
-        "they achieve lift-off from the ocean's surface and "
-        "soar through the water at high speeds.",
-    ],
-}
-
-df = pd.DataFrame(data)
-
-st.write(df)
-
-st.write(
-    "Now I want to evaluate the responses from my model. "
-    "One way to achieve this is to use the very powerful `st.data_editor` feature. "
-    "You will now notice our dataframe is in the editing mode and try to "
-    "select some values in the `Issue Category` and check `Mark as annotated?` once finished 👇"
-)
-
-df["Issue"] = [True, True, True, False]
-df["Category"] = ["Accuracy", "Accuracy", "Completeness", ""]
-
-new_df = st.data_editor(
-    df,
-    column_config={
-        "Questions": st.column_config.TextColumn(width="medium", disabled=True),
-        "Answers": st.column_config.TextColumn(width="medium", disabled=True),
-        "Issue": st.column_config.CheckboxColumn("Mark as annotated?", default=False),
-        "Category": st.column_config.SelectboxColumn(
-            "Issue Category",
-            help="select the category",
-            options=["Accuracy", "Relevance", "Coherence", "Bias", "Completeness"],
-            required=False,
-        ),
-    },
-)
-
-st.write(
-    "You will notice that we changed our dataframe and added new data. "
-    "Now it is time to visualize what we have annotated!"
-)
-
-st.divider()
-
-st.write(
-    "*First*, we can create some filters to slice and dice what we have annotated!"
-)
-
-col1, col2 = st.columns([1, 1])
-with col1:
-    issue_filter = st.selectbox("Issues or Non-issues", options=new_df.Issue.unique())
-with col2:
-    category_filter = st.selectbox(
-        "Choose a category",
-        options=new_df[new_df["Issue"] == issue_filter].Category.unique(),
+    st.header("Akademische Interessen")
+    st.write("Welche Studienfächer interessieren dich am meisten? (Mehrfachauswahl möglich)")
+    subjects = st.multiselect(
+        "",
+        ["Informatik", "Maschinenbau", "Medizin", "Rechtswissenschaften", "Psychologie", "Betriebswirtschaft", "Biologie", "Chemie", "Physik", "Literatur", "Philosophie"]
     )
 
-st.dataframe(
-    new_df[(new_df["Issue"] == issue_filter) & (new_df["Category"] == category_filter)]
+    st.header("Präferenzen")
+    st.write("Beantworte die folgenden Fragen zu deinen Präferenzen.")
+    location_preference = st.selectbox("Bevorzugst du eine bestimmte Region oder Stadt?", ["Keine Präferenz", "Großstadt", "Kleinstadt", "ländliche Gegend", "spezifische Region/Stadt"])
+    university_type = st.selectbox("Bevorzugst du eine bestimmte Art von Universität?", ["Keine Präferenz", "Technische Universität", "Fachhochschule", "Kunsthochschule", "Universität mit starkem Forschungsfokus"])
+    cost_concern = st.slider("Wie wichtig sind dir die Studienkosten?", 0, 10, 5)
+
+    st.header("Sonstige Überlegungen")
+    extracurriculars = st.text_area("Gibt es bestimmte außerschulische Aktivitäten, die dir wichtig sind? (z.B. Sport, Musik, ehrenamtliches Engagement)")
+    future_goals = st.text_area("Welche beruflichen Ziele verfolgst du nach deinem Studium?")
+
+    return {
+        "name": name,
+        "age": age,
+        "subjects": subjects,
+        "location_preference": location_preference,
+        "university_type": university_type,
+        "cost_concern": cost_concern,
+        "extracurriculars": extracurriculars,
+        "future_goals": future_goals
+    }
+
+# Funktion zur Anzeige des Fragenkatalogs für bestehende Studenten
+def current_student_questions():
+    st.header("Aktuelle Studiensituation")
+    current_study_field = st.text_input("In welchem Fach studierst du derzeit?")
+    current_university = st.text_input("An welcher Universität studierst du?")
+    current_degree_level = st.selectbox("Welchen Abschluss strebst du derzeit an?", ["Bachelor", "Master", "Promotion"])
+
+    st.header("Akademische Interessen")
+    st.write("Welche Vertiefungsrichtungen oder Zusatzqualifikationen interessieren dich? (Mehrfachauswahl möglich)")
+    interests = st.multiselect(
+        "",
+        ["Data Science", "Künstliche Intelligenz", "Nachhaltigkeit", "Entrepreneurship", "Medizinische Forschung", "Technologiemanagement"]
+    )
+
+    st.header("Präferenzen für den nächsten Schritt")
+    preferred_next_step = st.selectbox("Was ist dein bevorzugter nächster Schritt?", ["Weiteres Studium", "Berufseinstieg", "Forschungsprojekt", "Start eines eigenen Unternehmens"])
+
+    return {
+        "current_study_field": current_study_field,
+        "current_university": current_university,
+        "current_degree_level": current_degree_level,
+        "interests": interests,
+        "preferred_next_step": preferred_next_step
+    }
+
+# Funktion zur Abfrage des Social-Media-Profils
+def social_media_profile():
+    st.header("Social-Media-Profil")
+    linkedin_profile = st.text_input("Gib deinen LinkedIn-Profil-URL ein")
+    twitter_profile = st.text_input("Gib deinen Twitter-Profil-URL ein (optional)")
+
+    return {
+        "linkedin_profile": linkedin_profile,
+        "twitter_profile": twitter_profile
+    }
+
+# Funktion zur Ähnlichkeitserkennung
+def analyze_similarity(profile_data, social_media_data):
+    st.subheader("Analyse der Ähnlichkeiten")
+    # Platzhalter für die Analyse, die die Ähnlichkeit mit erfolgreichen Personen anhand von Social-Media-Profilen bewertet
+    st.write("Deine Profile werden analysiert und mit denen erfolgreicher Personen verglichen...")
+    # Beispielausgabe
+    st.write(f"Dein LinkedIn-Profil: {social_media_data['linkedin_profile']}")
+    st.write("Ähnlichkeiten mit erfolgreichen Personen: 85%")
+    st.write("Empfohlene Kontakte: [Prof. Dr. Max Mustermann](https://www.linkedin.com/in/maxmustermann), [Dr. Maria Musterfrau](https://www.linkedin.com/in/mariamusterfrau)")
+
+# Hauptlogik zur Anzeige der Fragenkataloge basierend auf der Auswahl
+if study_status == "Noch nicht":
+    profile_data = new_student_questions()
+    social_media_data = social_media_profile()
+elif study_status in ["Bachelor-Student/in", "Master-Student/in"]:
+    profile_data = current_student_questions()
+    social_media_data = social_media_profile()
+
+# Button zur Ergebnisauswertung
+if st.button("Ergebnisse anzeigen"):
+    st.subheader("Dein Profil")
+    for key, value in profile_data.items():
+        st.write(f"**{key.replace('_', ' ').title()}:** {value}")
+
+    if social_media_data:
+        analyze_similarity(profile_data, social_media_data)
+
+    # Hinweis auf nächste Schritte (optional)
+    st.write("""
+    Danke für das Ausfüllen des Fragebogens! Basierend auf deinen Antworten werden wir dir bald personalisierte Empfehlungen für Universitäten oder Kurse geben.
+    """)
+
+# Optional: Informationen über die App und Entwickler
+st.sidebar.header("Über diese App")
+st.sidebar.write("""
+Diese App wurde entwickelt, um jungen Menschen bei der Wahl der richtigen Universität oder des richtigen Kurses zu helfen. 
+Sie berücksichtigt persönliche Vorlieben, akademische Interessen und andere wichtige Faktoren.
+""")
+
+st.sidebar.header("Kontakt")
+st.sidebar.write("""
+Falls du Fragen oder Feedback hast, kontaktiere uns bitte unter:
+- **E-Mail:** info@uni-o-mat.de
+- **Telefon:** +49 123 456 789
+""")import streamlit as st
+
+# Titel der App
+st.title("Uni-O-Mat")
+
+# Einführungstext
+st.write("""
+Willkommen beim Uni-O-Mat! Diese App hilft dir dabei, die richtige Entscheidung bezüglich deiner Universitätswahl oder Kurswahl zu treffen. 
+Bitte wähle eine der folgenden Optionen aus:
+""")
+
+# Auswahl ob die Person bereits studiert
+study_status = st.radio(
+    "Bist du bereits Student/in?",
+    ("Noch nicht", "Bachelor-Student/in", "Master-Student/in")
 )
 
-st.markdown("")
-st.write(
-    "*Next*, we can visualize our data quickly using `st.metrics` and `st.bar_plot`"
-)
+# Funktion zur Anzeige des Fragenkatalogs für neue Studenten
+def new_student_questions():
+    st.header("Persönliche Informationen")
+    name = st.text_input("Wie heißt du?")
+    age = st.number_input("Wie alt bist du?", min_value=16, max_value=100)
 
-issue_cnt = len(new_df[new_df["Issue"] == True])
-total_cnt = len(new_df)
-issue_perc = f"{issue_cnt/total_cnt*100:.0f}%"
+    st.header("Akademische Interessen")
+    st.write("Welche Studienfächer interessieren dich am meisten? (Mehrfachauswahl möglich)")
+    subjects = st.multiselect(
+        "",
+        ["Informatik", "Maschinenbau", "Medizin", "Rechtswissenschaften", "Psychologie", "Betriebswirtschaft", "Biologie", "Chemie", "Physik", "Literatur", "Philosophie"]
+    )
 
-col1, col2 = st.columns([1, 1])
-with col1:
-    st.metric("Number of responses", issue_cnt)
-with col2:
-    st.metric("Annotation Progress", issue_perc)
+    st.header("Präferenzen")
+    st.write("Beantworte die folgenden Fragen zu deinen Präferenzen.")
+    location_preference = st.selectbox("Bevorzugst du eine bestimmte Region oder Stadt?", ["Keine Präferenz", "Großstadt", "Kleinstadt", "ländliche Gegend", "spezifische Region/Stadt"])
+    university_type = st.selectbox("Bevorzugst du eine bestimmte Art von Universität?", ["Keine Präferenz", "Technische Universität", "Fachhochschule", "Kunsthochschule", "Universität mit starkem Forschungsfokus"])
+    cost_concern = st.slider("Wie wichtig sind dir die Studienkosten?", 0, 10, 5)
 
-df_plot = new_df[new_df["Category"] != ""].Category.value_counts().reset_index()
+    st.header("Sonstige Überlegungen")
+    extracurriculars = st.text_area("Gibt es bestimmte außerschulische Aktivitäten, die dir wichtig sind? (z.B. Sport, Musik, ehrenamtliches Engagement)")
+    future_goals = st.text_area("Welche beruflichen Ziele verfolgst du nach deinem Studium?")
 
-st.bar_chart(df_plot, x="Category", y="count")
+    return {
+        "name": name,
+        "age": age,
+        "subjects": subjects,
+        "location_preference": location_preference,
+        "university_type": university_type,
+        "cost_concern": cost_concern,
+        "extracurriculars": extracurriculars,
+        "future_goals": future_goals
+    }
 
-st.write(
-    "Here we are at the end of getting started with streamlit! Happy Streamlit-ing! :balloon:"
-)
+# Funktion zur Anzeige des Fragenkatalogs für bestehende Studenten
+def current_student_questions():
+    st.header("Aktuelle Studiensituation")
+    current_study_field = st.text_input("In welchem Fach studierst du derzeit?")
+    current_university = st.text_input("An welcher Universität studierst du?")
+    current_degree_level = st.selectbox("Welchen Abschluss strebst du derzeit an?", ["Bachelor", "Master", "Promotion"])
 
+    st.header("Akademische Interessen")
+    st.write("Welche Vertiefungsrichtungen oder Zusatzqualifikationen interessieren dich? (Mehrfachauswahl möglich)")
+    interests = st.multiselect(
+        "",
+        ["Data Science", "Künstliche Intelligenz", "Nachhaltigkeit", "Entrepreneurship", "Medizinische Forschung", "Technologiemanagement"]
+    )
+
+    st.header("Präferenzen für den nächsten Schritt")
+    preferred_next_step = st.selectbox("Was ist dein bevorzugter nächster Schritt?", ["Weiteres Studium", "Berufseinstieg", "Forschungsprojekt", "Start eines eigenen Unternehmens"])
+
+    return {
+        "current_study_field": current_study_field,
+        "current_university": current_university,
+        "current_degree_level": current_degree_level,
+        "interests": interests,
+        "preferred_next_step": preferred_next_step
+    }
+
+# Funktion zur Abfrage des Social-Media-Profils
+def social_media_profile():
+    st.header("Social-Media-Profil")
+    linkedin_profile = st.text_input("Gib deinen LinkedIn-Profil-URL ein")
+    twitter_profile = st.text_input("Gib deinen Twitter-Profil-URL ein (optional)")
+
+    return {
+        "linkedin_profile": linkedin_profile,
+        "twitter_profile": twitter_profile
+    }
+
+# Funktion zur Ähnlichkeitserkennung
+def analyze_similarity(profile_data, social_media_data):
+    st.subheader("Analyse der Ähnlichkeiten")
+    # Platzhalter für die Analyse, die die Ähnlichkeit mit erfolgreichen Personen anhand von Social-Media-Profilen bewertet
+    st.write("Deine Profile werden analysiert und mit denen erfolgreicher Personen verglichen...")
+    # Beispielausgabe
+    st.write(f"Dein LinkedIn-Profil: {social_media_data['linkedin_profile']}")
+    st.write("Ähnlichkeiten mit erfolgreichen Personen: 85%")
+    st.write("Empfohlene Kontakte: [Prof. Dr. Max Mustermann](https://www.linkedin.com/in/maxmustermann), [Dr. Maria Musterfrau](https://www.linkedin.com/in/mariamusterfrau)")
+
+# Hauptlogik zur Anzeige der Fragenkataloge basierend auf der Auswahl
+if study_status == "Noch nicht":
+    profile_data = new_student_questions()
+    social_media_data = social_media_profile()
+elif study_status in ["Bachelor-Student/in", "Master-Student/in"]:
+    profile_data = current_student_questions()
+    social_media_data = social_media_profile()
+
+# Button zur Ergebnisauswertung
+if st.button("Ergebnisse anzeigen"):
+    st.subheader("Dein Profil")
+    for key, value in profile_data.items():
+        st.write(f"**{key.replace('_', ' ').title()}:** {value}")
+
+    if social_media_data:
+        analyze_similarity(profile_data, social_media_data)
+
+    # Hinweis auf nächste Schritte (optional)
+    st.write("""
+    Danke für das Ausfüllen des Fragebogens! Basierend auf deinen Antworten werden wir dir bald personalisierte Empfehlungen für Universitäten oder Kurse geben.
+    """)
+
+# Optional: Informationen über die App und Entwickler
+st.sidebar.header("Über diese App")
+st.sidebar.write("""
+Diese App wurde entwickelt, um jungen Menschen bei der Wahl der richtigen Universität oder des richtigen Kurses zu helfen. 
+Sie berücksichtigt persönliche Vorlieben, akademische Interessen und andere wichtige Faktoren.
+""")
+
+st.sidebar.header("Kontakt")
+st.sidebar.write("""
+Falls du Fragen oder Feedback hast, kontaktiere uns bitte unter:
+- **E-Mail:** info@uni-o-mat.de
+- **Telefon:** +49 123 456 789
+""")
