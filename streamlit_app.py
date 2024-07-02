@@ -7,12 +7,15 @@ st.markdown(
         background-cplor:
 #FFFF00;
     }
+    .logo {
+        width: 200px;
+    }
     </style>
     """,
     unsafe_allow_html=True
 )
 
-st.image("uni.png", width=200px)
+st.image("uni.png", use_column_width=False, width=200)
 
 # Titel der App
 st.title("Uni-O-Mat")
