@@ -1,5 +1,19 @@
 import streamlit as st
 
+st.markdown(
+    """
+    <style>
+    .stApp {
+        background-cplor:
+#FFFF00;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+st.image("/workspaces/uni-o-mat/uni.jpeg", use_column_width=True)
+
 # Titel der App
 st.title("Uni-O-Mat")
 
